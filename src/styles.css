@@ -192,3 +192,14 @@ html{scroll-behavior:smooth}body{font-family:'DM Sans',sans-serif;background:#10
 .banner-crit>strong, .crit-tag, .log-crit, .result-critical,
 .result-critical strong { color: var(--flux-gold-bright)!important; }
 .action-critical { color: var(--flux-gold-bright)!important; border-color: var(--flux-gold-border)!important; }
+.app-shell .text-flux, .app-shell .weapon-summary .text-flux, .app-shell .nomen-head .text-flux { color: var(--flux-gold-bright)!important; }
+.app-shell .text-karma, .app-shell .weapon-summary .text-karma { color: var(--karma-violet-text)!important; }
+.app-shell .quick-actions .action-flux, .app-shell .game-panel .action-flux,
+.app-shell .game-panel .action-critical { color: var(--flux-gold-bright)!important; border-color: var(--flux-gold-border)!important; }
+.app-shell .game-panel .action-karma { color: var(--karma-violet-text)!important; border-color: var(--karma-violet-border)!important; }
+.app-shell .quick-actions .action-flux:hover, .app-shell .game-panel .action-flux:hover { background: var(--flux-gold-surface)!important; }
+.app-shell .game-panel .action-karma:hover { background: var(--karma-violet-surface)!important; }
+.app-shell .flux-result .panel-head h3, .app-shell .flux-result strong { color: var(--flux-gold-bright); }
+.app-shell .result-critical strong { color: var(--flux-gold-bright)!important; }
+.app-shell .karma-alert, .app-shell .karma-alert.karma-normal,
+.app-shell .karma-alert.karma-gaki, .app-shell .karma-alert.karma-berserker { background: var(--karma-violet-surface); border-color: var(--karma-violet-border); }
