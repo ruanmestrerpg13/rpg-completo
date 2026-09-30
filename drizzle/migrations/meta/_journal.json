@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790743810581,
+      "tag": "0000_create_herdeiros_workspace",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790744084404,
+      "tag": "0001_add_profiles_and_online_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790744095602,
+      "tag": "0002_fix_online_membership_policy",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790746123029,
+      "tag": "0003_herdeiros_workspace_combat",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790746144381,
+      "tag": "0004_combat_integration",
+      "breakpoints": true
+    }
+  ]
+}
