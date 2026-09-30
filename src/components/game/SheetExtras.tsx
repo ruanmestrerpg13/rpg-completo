@@ -37,7 +37,7 @@ export function GakiPassive({ character, update, addRoll }: { character: Charact
   const kMax = karmaMaximum(character.mente, character.espirito);
   return <div className="passive">
     <span className="field-kicker">PASSIVA DE LINHAGEM · GAKI</span>
-    <p>Ao final de um combate, o Gaki pode absorver o Fluxo restante dos alvos com os quais interagiu. Para cada alvo derrotado, recupera 1d4 PV. Ao consumir esse Fluxo, faz um Teste de Mente para verificar se acumula Karma.</p>
+    <p>Ao final de um combate, o Gaki pode absorver o <span className="text-flux">Fluxo</span> restante dos alvos com os quais interagiu. Para cada alvo derrotado, recupera 1d4 PV. Ao consumir esse <span className="text-flux">Fluxo</span>, faz um Teste de Mente para verificar se acumula <span className="text-karma">Karma</span>.</p>
     <div className="gaki-grid">
       <Stepper label="ALVOS DERROTADOS" value={defeated} min={0} max={30} onChange={setDefeated} />
       <Button variant="outline" disabled={defeated < 1} onClick={() => {
@@ -91,7 +91,7 @@ export function WeaponPanel({ character, update, addRoll }: { character: Charact
         <option value="corpo">Corpo ({character.corpo}d20)</option>
       </select></Field>
     </div>
-    {type && <p className="weapon-summary">Ataque <strong>{hitCount}d20{hitCount > 1 ? ' (maior)' : ''} + {ATTR_LABEL[hitAttr]} ({character[hitAttr]})</strong> · Dano <strong>{dice}{damageAttr ? ` + ${ATTR_LABEL[damageAttr]} (${character[damageAttr]})` : ''}{karmaDamageBonus(character) ? ` + ${karmaDamageBonus(character)} Karma` : ''}</strong><br /><span>{type.note}</span></p>}
+    {type && <p className="weapon-summary">Ataque <strong>{hitCount}d20{hitCount > 1 ? ' (maior)' : ''} + {ATTR_LABEL[hitAttr]} ({character[hitAttr]})</strong> · Dano <strong>{dice}{damageAttr ? ` + ${ATTR_LABEL[damageAttr]} (${character[damageAttr]})` : ''}</strong>{karmaDamageBonus(character) ? <strong className="text-karma"> + {karmaDamageBonus(character)} Karma</strong> : null}<br /><span>{type.note}</span></p>}
     <div className="quick-actions mt-3">
       <Button variant="outline" disabled={!type} onClick={() => {
         const r = multiAttackRoll(hitCount, character[hitAttr]); setLast({ d20: r.d20, total: r.total, crit: r.crit }); setDmg(null);
