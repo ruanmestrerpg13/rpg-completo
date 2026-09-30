@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ArrowRight, Crosshair, Dices, RotateCcw, Shield, Skull, Swords, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-  ATTR_LABEL, WEAPONS, attackRoll, cappedNomenclatureDice, cappedWeaponDice, damageRoll, derived, initiativeRoll,
+  ATTR_LABEL, WEAPONS, attackRoll, multiAttackRoll, humanAttackDice, cappedNomenclatureDice, cappedWeaponDice, damageRoll, derived, initiativeRoll,
   karmaDamageBonus, weaponAttrFor, weaponByKey, type Attr, type Campaign, type Character, type Npc,
 } from '@/lib/game';
 import type { RollEntry } from './SheetExtras';
@@ -12,7 +12,7 @@ type Combatant = {
   corpo: number; mente: number; espirito: number; esquiva: number; bloqueio: number; initiative: number | null;
   pc?: Character; npc?: Npc;
 };
-type AttackOption = { id: string; label: string; hitAttr: Attr; dice: string[]; damageAttr: Attr | null; pfCost: number; karma: number; nomenclature: boolean };
+type AttackOption = { id: string; label: string; hitAttr: Attr; dice: string[]; damageAttr: Attr | null; pfCost: number; karma: number; nomenclature: boolean; hitCount?: number };
 
 function toCombatants(party: Character[], npcs: Npc[]): Combatant[] {
   const pcs = party.map<Combatant>(c => { const d = derived(c.corpo); return { id: c.id, kind: 'pc', name: c.name, pv: c.pv_current, pvMax: c.pv_max, pf: c.pf_current, pfMax: c.pf_max, corpo: c.corpo, mente: c.mente, espirito: c.espirito, esquiva: d.esquiva, bloqueio: d.bloqueio, initiative: c.initiative, pc: c }; });
@@ -28,7 +28,7 @@ function optionsFor(c: Combatant): AttackOption[] {
   ];
   if (c.pc) {
     const w = weaponByKey(c.pc.weapon_type);
-    if (w && w.attr !== 'corpo') { const attr = weaponAttrFor(c.pc.lineage); opts.push({ id: 'arma', label: `Arma · ${c.pc.weapon || w.label} (${cappedWeaponDice(w.key, c.pc.weapon_dice)}${w.attr ? ` + ${ATTR_LABEL[attr]}` : ''})`, hitAttr: attr, dice: [cappedWeaponDice(w.key, c.pc.weapon_dice)!], damageAttr: w.attr ? attr : null, pfCost: 0, karma, nomenclature: false }); }
+    if (w && w.attr !== 'corpo') { const attr = weaponAttrFor(c.pc.lineage); const human = c.pc.lineage === 'Humano'; const hc = human ? humanAttackDice(c.pc.mente) : 1; opts.push({ id: 'arma', label: `Arma · ${c.pc.weapon || w.label} (${human ? `ataque ${hc}d20 + MENTE · dano ` : ''}${cappedWeaponDice(w.key, c.pc.weapon_dice)}${w.attr && !human ? ` + ${ATTR_LABEL[attr]}` : ''})`, hitAttr: attr, dice: [cappedWeaponDice(w.key, c.pc.weapon_dice)!], damageAttr: w.attr && !human ? attr : null, pfCost: 0, karma, nomenclature: false, hitCount: hc }); }
     c.pc.nomenclatures.forEach((n, i) => { const dice = cappedNomenclatureDice(n.kind, n.dice); opts.push({ id: `nom-${i}`, label: `Nomenclatura · ${n.name} (${dice}d8 · ${n.cost} PF)`, hitAttr: 'espirito', dice: [`${dice}d8`], damageAttr: null, pfCost: n.cost, karma, nomenclature: true }); });
   } else {
     WEAPONS.filter(w => w.attr !== 'corpo').forEach(w => opts.push({ id: `npc-${w.key}`, label: `Arma · ${w.label} (${w.dice.join(' a ')}${w.attr ? ' + CORPO' : ''})`, hitAttr: 'corpo', dice: w.dice, damageAttr: w.attr ? 'corpo' : null, pfCost: 0, karma: 0, nomenclature: false }));
@@ -68,10 +68,10 @@ export function CombatPanel({ campaign, party, npcs, saveCampaign, saveNpc, upda
     if (!attacker || !target || !option) return;
     if (option.pfCost > attacker.pf) return;
     const attrValue = attacker[option.hitAttr];
-    const r = attackRoll(attrValue, target.esquiva);
+    const hc = option.hitCount ?? 1; const r = hc > 1 ? multiAttackRoll(hc, attrValue, target.esquiva) : { ...attackRoll(attrValue, target.esquiva), dice: undefined as number[] | undefined };
     if (option.pfCost) setResources(attacker, null, attacker.pf - option.pfCost);
     setPending({ attackerId: attacker.id, targetId: target.id, option, dice, d20: r.d20, total: r.total, esquiva: target.esquiva, hit: !!r.hit, crit: r.crit });
-    addRoll({ expression: `1d20 + ${attrValue}`, dice: [r.d20], modifier: attrValue, total: r.total, source: `${attacker.name} → ${target.name}${r.crit ? ' — CRÍTICO' : ''}`, crit: r.crit });
+    addRoll({ expression: `${hc}d20${hc > 1 ? ' (maior)' : ''} + ${attrValue}`, dice: r.dice ?? [r.d20], modifier: attrValue, total: r.total, source: `${attacker.name} → ${target.name}${r.crit ? ' — CRÍTICO' : ''}`, crit: r.crit });
     log([`${attacker.name} ataca ${target.name} (${option.label}${option.pfCost ? `, −${option.pfCost} PF` : ''}): d20 ${r.d20} + ${ATTR_LABEL[option.hitAttr]} ${attrValue} = ${r.total} vs Esquiva ${target.esquiva} → ${r.hit ? (r.crit ? 'CRÍTICO! ATAQUE ACERTOU' : 'ATAQUE ACERTOU') : 'ALVO ESQUIVOU'}`]);
   }
 

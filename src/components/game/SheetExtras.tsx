@@ -3,7 +3,7 @@ import { Dices, Plus, Skull, Sparkles, Swords, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Stepper } from './Controls';
 import {
-  ATTR_LABEL, NOMENCLATURE_LABEL, NOMENCLATURE_RANGES, WEAPONS, attackRoll, cappedNomenclatureDice, cappedWeaponDice,
+  ATTR_LABEL, NOMENCLATURE_LABEL, NOMENCLATURE_RANGES, WEAPONS, attackRoll, multiAttackRoll, humanAttackDice, absorbPf, cappedNomenclatureDice, cappedWeaponDice,
   damageRoll, dieFor, karmaDamageBonus, karmaMaximum, rollDice, weaponAttrFor, weaponByKey,
   type Character, type NomenclatureKind,
 } from '@/lib/game';
@@ -75,7 +75,9 @@ export function WeaponPanel({ character, update, addRoll }: { character: Charact
   const dice = type ? cappedWeaponDice(type.key, character.weapon_dice)! : '';
   const attr = weaponAttrFor(character.lineage);
   const hitAttr = type?.attr === 'corpo' ? 'corpo' : attr;
-  const damageAttr = type?.attr === 'corpo' ? 'corpo' : type?.attr === 'atributo' ? attr : null;
+  const human = character.lineage === 'Humano' && type?.attr !== 'corpo';
+  const hitCount = human ? humanAttackDice(character.mente) : 1;
+  const damageAttr = type?.attr === 'corpo' ? 'corpo' : type?.attr === 'atributo' && !human ? attr : null;
   const bonus = (damageAttr ? character[damageAttr] : 0) + karmaDamageBonus(character);
   return <div className="weapon-block">
     <span className="field-kicker">{character.lineage === 'Humano' ? 'ARMA DE VÍNCULO · VONTADE, HISTÓRIA E IDENTIDADE' : 'ARMA'}</span>
@@ -87,12 +89,12 @@ export function WeaponPanel({ character, update, addRoll }: { character: Charact
         {(type?.dice ?? []).map(d => <option key={d}>{d}</option>)}
       </select></Field>
     </div>
-    {type && <p className="weapon-summary">Ataque <strong>1d20 + {ATTR_LABEL[hitAttr]} ({character[hitAttr]})</strong> · Dano <strong>{dice}{damageAttr ? ` + ${ATTR_LABEL[damageAttr]} (${character[damageAttr]})` : ''}{karmaDamageBonus(character) ? ` + ${karmaDamageBonus(character)} Karma` : ''}</strong><br /><span>{type.note}</span></p>}
+    {type && <p className="weapon-summary">Ataque <strong>{hitCount}d20{hitCount > 1 ? ' (maior)' : ''} + {ATTR_LABEL[hitAttr]} ({character[hitAttr]})</strong> · Dano <strong>{dice}{damageAttr ? ` + ${ATTR_LABEL[damageAttr]} (${character[damageAttr]})` : ''}{karmaDamageBonus(character) ? ` + ${karmaDamageBonus(character)} Karma` : ''}</strong><br /><span>{type.note}</span></p>}
     <div className="quick-actions mt-3">
       <Button variant="outline" disabled={!type} onClick={() => {
-        const r = attackRoll(character[hitAttr]); setLast({ d20: r.d20, total: r.total, crit: r.crit }); setDmg(null);
-        addRoll({ expression: `1d20 + ${character[hitAttr]}`, dice: [r.d20], modifier: character[hitAttr], total: r.total, source: `Ataque com arma${r.crit ? ' — CRÍTICO' : ''}`, crit: r.crit });
-      }}><Swords /> Atacar (1d20 + {ATTR_LABEL[hitAttr]})</Button>
+        const r = multiAttackRoll(hitCount, character[hitAttr]); setLast({ d20: r.d20, total: r.total, crit: r.crit }); setDmg(null);
+        addRoll({ expression: `${hitCount}d20${hitCount > 1 ? ' (maior)' : ''} + ${character[hitAttr]}`, dice: r.dice, modifier: character[hitAttr], total: r.total, source: `Ataque com arma${r.crit ? ' — CRÍTICO' : ''}`, crit: r.crit });
+      }}><Swords /> Atacar ({hitCount}d20 + {ATTR_LABEL[hitAttr]})</Button>
       <Button variant="outline" disabled={!type || !last} onClick={() => {
         const d = damageRoll(dice, bonus, !!last?.crit); setDmg({ total: d.total, dice: d.dice, bonus, crit: !!last?.crit });
         addRoll({ expression: d.expression, dice: d.dice, modifier: bonus, total: d.total, source: `Dano da arma${last?.crit ? ' — CRÍTICO (dados dobrados)' : ''}`, crit: !!last?.crit });
@@ -163,4 +165,23 @@ export function AbilitiesTab({ character, update }: { character: Character; upda
       <div className="row-actions"><Button size="icon" variant="ghost" title="Excluir habilidade" aria-label="Excluir habilidade" onClick={() => update({ abilities: character.abilities.filter((_, j) => j !== i) })}><Trash2 /></Button></div>
     </div>)}{!character.abilities.length && <p className="empty-copy">Nenhuma habilidade registrada.</p>}</div>
   </div>;
+}
+
+/** Ação rápida: Absorver PF. d20 = Espírito; cada dado convertido individualmente; + Espírito no total. */
+export function AbsorbPfAction({ character, update, addRoll }: { character: Character; update: Update; addRoll: AddRoll }) {
+  const [res, setRes] = useState<ReturnType<typeof absorbPf> | null>(null);
+  const [open, setOpen] = useState(false);
+  return <>
+    <Button variant="outline" onClick={() => {
+      const r = absorbPf(character.espirito); setRes(r); setOpen(true);
+      update({ pf_current: Math.min(character.pf_max, character.pf_current + r.total) });
+      addRoll({ expression: `${r.count}d20 (convertidos) + ${r.espirito}`, dice: r.dice.map(d => d.value), modifier: r.espirito, total: r.total, source: `Absorver PF${r.crit ? ' — CRÍTICO' : ''}`, crit: r.crit });
+    }}><Sparkles /> Absorver PF</Button>
+    {open && res && <div className="game-panel" style={{ gridColumn: '1 / -1' }}>
+      <div className="panel-head"><h3>Absorver PF · {res.count}d20 (Espírito {res.espirito})</h3><Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Fechar</Button></div>
+      <ul className="field-stack text-sm">{res.dice.map((d, i) => <li key={i}>D20 #{i + 1}: <strong>{d.value}</strong> · faixa {d.band} → <strong>{d.pf} PF</strong>{d.crit ? ' · CRÍTICO!' : ''}</li>)}</ul>
+      <p className="text-sm mt-3">PF dos dados: <strong>{res.diceTotal}</strong> + Espírito: <strong>{res.espirito}</strong> = <strong>{res.total} PF absorvidos</strong>{res.crit ? ' · houve crítico (20)' : ''}</p>
+      <p className="muted-copy text-xs mt-1">PF atual atualizado automaticamente (limitado ao PF máximo).</p>
+    </div>}
+  </>;
 }
