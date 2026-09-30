@@ -99,7 +99,7 @@ export function CombatPanel({ campaign, party, npcs, saveCampaign, saveNpc, upda
         <div className="combat-list">{combatants.map((c, i) => <div key={c.id} className={`combatant ${current?.id === c.id ? 'current' : ''}`}>
           <span className="combatant-number">{c.initiative ?? '—'}</span>
           <span className="combatant-icon">{c.kind === 'npc' ? <Skull /> : <Users />}</span>
-          <span className="flex-1"><strong>{c.name}</strong><small>{c.pv} / {c.pvMax} PV · {c.pf} / {c.pfMax} PF · Esq {c.esquiva} · RD {c.bloqueio}{c.pv === 0 ? ' · AGONIA' : ''}</small></span>
+          <span className="flex-1"><strong>{c.name}</strong><small>{c.pv} / {c.pvMax} PV · <span className="text-flux">{c.pf} / {c.pfMax} PF</span> · Esq {c.esquiva} · RD {c.bloqueio}{c.pv === 0 ? ' · AGONIA' : ''}</small></span>
           {c.npc ? <Button variant="ghost" size="icon" title="Rolar iniciativa" aria-label={`Rolar iniciativa de ${c.name}`} onClick={() => rollNpcInitiative(c.npc!)}><Dices /></Button> : <span className="field-kicker">{c.initiative === null ? 'AGUARDANDO FICHA' : 'DA FICHA'}</span>}
           <span className="sr-only">{i}</span>
         </div>)}{!combatants.length && <p className="empty-copy">Os jogadores entram pela Mesa escolhendo sua ficha. Adicione NPCs para o combate.</p>}</div>
@@ -118,11 +118,11 @@ export function CombatPanel({ campaign, party, npcs, saveCampaign, saveNpc, upda
           </div>
           <label className="field"><span className="field-label">ATAQUE</span><select value={option?.id} onChange={e => { setOptionId(e.target.value); setDiceChoice(''); setPending(null); }}>{options.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
           {option && option.dice.length > 1 && <label className="field"><span className="field-label">DADOS DE DANO (LIMITE DA TABELA)</span><select value={dice} onChange={e => setDiceChoice(e.target.value)}>{option.dice.map(d => <option key={d}>{d}</option>)}</select></label>}
-          {option && <p className="weapon-summary">Acerto: <strong>{option.hitCount ?? Math.max(1, attacker[option.hitAttr])}d20{(option.hitCount ?? attacker[option.hitAttr]) > 1 ? ' (maior)' : ''} + {ATTR_LABEL[option.hitAttr]} ({attacker[option.hitAttr]})</strong> vs Esquiva <strong>{target.esquiva}</strong> · Dano <strong>{dice}{option.damageAttr ? ` + ${ATTR_LABEL[option.damageAttr]} (${attacker[option.damageAttr]})` : ''}{option.karma ? ` + ${option.karma} Karma` : ''}</strong>{option.pfCost ? <> · Custo <strong>{option.pfCost} PF</strong> (tem {attacker.pf})</> : null}</p>}
+          {option && <p className="weapon-summary">Acerto: <strong>{option.hitCount ?? Math.max(1, attacker[option.hitAttr])}d20{(option.hitCount ?? attacker[option.hitAttr]) > 1 ? ' (maior)' : ''} + {ATTR_LABEL[option.hitAttr]} ({attacker[option.hitAttr]})</strong> vs Esquiva <strong>{target.esquiva}</strong> · Dano <strong>{dice}{option.damageAttr ? ` + ${ATTR_LABEL[option.damageAttr]} (${attacker[option.damageAttr]})` : ''}</strong>{option.karma ? <strong className="text-karma"> + {option.karma} Karma</strong> : null}{option.pfCost ? <> · Custo <strong className="text-flux">{option.pfCost} PF</strong> (tem <span className="text-flux">{attacker.pf}</span>)</> : null}</p>}
           <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={useBlock} onChange={e => setUseBlock(e.target.checked)} /> Aplicar Bloqueio/RD do alvo ({target.bloqueio})</label>
           <div className="flex flex-wrap gap-2">
             <Button disabled={!option || option.pfCost > attacker.pf} onClick={rollAttack}><Swords /> Rolar ataque</Button>
-            <Button variant="outline" disabled={!pending?.hit || !!pending?.damage} onClick={rollDamage}><Dices /> Rolar dano{pending?.crit ? ' crítico' : ''}</Button>
+            <Button variant="outline" className={pending?.crit ? 'action-critical' : ''} disabled={!pending?.hit || !!pending?.damage} onClick={rollDamage}><Dices /> Rolar dano{pending?.crit ? ' crítico' : ''}</Button>
           </div>
           {pending && <div className={`combat-banner ${pending.crit ? 'banner-crit' : pending.hit ? 'banner-hit' : 'banner-miss'}`}>
             <strong>{pending.crit ? 'CRÍTICO! ATAQUE ACERTOU' : pending.hit ? 'ATAQUE ACERTOU' : 'ALVO ESQUIVOU'}</strong>

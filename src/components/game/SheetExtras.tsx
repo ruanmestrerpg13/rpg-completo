@@ -37,7 +37,7 @@ export function GakiPassive({ character, update, addRoll }: { character: Charact
   const kMax = karmaMaximum(character.mente, character.espirito);
   return <div className="passive">
     <span className="field-kicker">PASSIVA DE LINHAGEM · GAKI</span>
-    <p>Ao final de um combate, o Gaki pode absorver o Fluxo restante dos alvos com os quais interagiu. Para cada alvo derrotado, recupera 1d4 PV. Ao consumir esse Fluxo, faz um Teste de Mente para verificar se acumula Karma.</p>
+    <p>Ao final de um combate, o Gaki pode absorver o <span className="text-flux">Fluxo</span> restante dos alvos com os quais interagiu. Para cada alvo derrotado, recupera 1d4 PV. Ao consumir esse <span className="text-flux">Fluxo</span>, faz um Teste de Mente para verificar se acumula <span className="text-karma">Karma</span>.</p>
     <div className="gaki-grid">
       <Stepper label="ALVOS DERROTADOS" value={defeated} min={0} max={30} onChange={setDefeated} />
       <Button variant="outline" disabled={defeated < 1} onClick={() => {
@@ -45,7 +45,7 @@ export function GakiPassive({ character, update, addRoll }: { character: Charact
         setHeal({ dice, total }); setTest(null);
         update({ pv_current: Math.min(character.pv_max, character.pv_current + total) });
         addRoll({ expression: `${defeated}d4`, dice, modifier: 0, total, source: `Absorver Fluxo (+${total} PV)` });
-      }}><Sparkles /> Absorver Fluxo ({defeated}d4 PV)</Button>
+      }} className="action-flux"><Sparkles /> Absorver Fluxo ({defeated}d4 PV)</Button>
     </div>
     {heal && <div className="roll-result"><span>Recuperou <strong>{heal.total} PV</strong> ({heal.dice.join(' + ')})</span></div>}
     {heal && <div className="gaki-grid">
@@ -61,7 +61,7 @@ export function GakiPassive({ character, update, addRoll }: { character: Charact
       <span>Resultado {test.roll} contra DT {test.dt}</span>
       {!test.success && <div className="gaki-grid mt-3">
         <Stepper label="KARMA ACUMULADO (MESTRE)" value={karmaGain} min={1} max={kMax} tone="karma" onChange={setKarmaGain} />
-        <Button variant="outline" onClick={() => { update({ karma: Math.min(kMax, character.karma + karmaGain) }); setTest(null); setHeal(null); }}><Skull /> Registrar Karma</Button>
+        <Button variant="outline" className="action-karma" onClick={() => { update({ karma: Math.min(kMax, character.karma + karmaGain) }); setTest(null); setHeal(null); }}><Skull /> Registrar Karma</Button>
       </div>}
     </div>}
   </div>;
@@ -91,7 +91,7 @@ export function WeaponPanel({ character, update, addRoll }: { character: Charact
         <option value="corpo">Corpo ({character.corpo}d20)</option>
       </select></Field>
     </div>
-    {type && <p className="weapon-summary">Ataque <strong>{hitCount}d20{hitCount > 1 ? ' (maior)' : ''} + {ATTR_LABEL[hitAttr]} ({character[hitAttr]})</strong> · Dano <strong>{dice}{damageAttr ? ` + ${ATTR_LABEL[damageAttr]} (${character[damageAttr]})` : ''}{karmaDamageBonus(character) ? ` + ${karmaDamageBonus(character)} Karma` : ''}</strong><br /><span>{type.note}</span></p>}
+    {type && <p className="weapon-summary">Ataque <strong>{hitCount}d20{hitCount > 1 ? ' (maior)' : ''} + {ATTR_LABEL[hitAttr]} ({character[hitAttr]})</strong> · Dano <strong>{dice}{damageAttr ? ` + ${ATTR_LABEL[damageAttr]} (${character[damageAttr]})` : ''}</strong>{karmaDamageBonus(character) ? <strong className="text-karma"> + {karmaDamageBonus(character)} Karma</strong> : null}<br /><span>{type.note}</span></p>}
     <div className="quick-actions mt-3">
       <Button variant="outline" disabled={!type} onClick={() => {
         const r = multiAttackRoll(hitCount, character[hitAttr]); setLast({ d20: r.d20, total: r.total, crit: r.crit }); setDmg(null);
@@ -100,10 +100,10 @@ export function WeaponPanel({ character, update, addRoll }: { character: Charact
       <Button variant="outline" disabled={!type || !last} onClick={() => {
         const d = damageRoll(dice, bonus, !!last?.crit); setDmg({ total: d.total, dice: d.dice, bonus, crit: !!last?.crit });
         addRoll({ expression: d.expression, dice: d.dice, modifier: bonus, total: d.total, source: `Dano da arma${last?.crit ? ' — CRÍTICO (dados dobrados)' : ''}`, crit: !!last?.crit });
-      }}><Dices /> Rolar dano{last?.crit ? ' crítico' : ''}</Button>
+      }} className={last?.crit ? 'action-critical' : ''}><Dices /> Rolar dano{last?.crit ? ' crítico' : ''}</Button>
     </div>
     {last && <div className={`combat-banner ${last.crit ? 'banner-crit' : 'banner-neutral'}`}><strong>{last.crit ? 'CRÍTICO! 20 NATURAL' : `ATAQUE: ${last.total}`}</strong><span>d20 = {last.d20} · total {last.total}{last.crit ? ' · confirma se superar a Esquiva do alvo; dados de dano dobrados' : ' · compare com a Esquiva do alvo'}</span></div>}
-    {dmg && <div className="roll-result"><span>Dano{dmg.crit ? ' CRÍTICO' : ''}: <strong>{dmg.total}</strong> ({dmg.dice.join(' + ')}{dmg.bonus ? ` + ${dmg.bonus}` : ''})</span></div>}
+    {dmg && <div className={`roll-result ${dmg.crit ? 'result-critical' : ''}`}><span>Dano{dmg.crit ? ' CRÍTICO' : ''}: <strong>{dmg.total}</strong> ({dmg.dice.join(' + ')}{dmg.bonus ? ` + ${dmg.bonus}` : ''})</span></div>}
   </div>;
 }
 
@@ -131,14 +131,14 @@ export function NomenclaturesTab({ character, update, addRoll }: { character: Ch
     <div className="item-list">{character.nomenclatures.map((item, i) => {
       const kind = item.kind ?? 'Direta'; const n = cappedNomenclatureDice(kind, item.dice);
       return <div className="editable-row" key={i}>
-        <div className="nomen-head"><strong>{item.name}</strong><span>{kind} · {n}d8 · {item.cost} PF</span></div>
+        <div className="nomen-head"><strong>{item.name}</strong><span>{kind} · {n}d8 · <span className="text-flux">{item.cost} PF</span></span></div>
         {item.effect && <p className="empty-copy">{item.effect}</p>}
         <div className="row-actions">
           <Button size="sm" variant="outline" disabled={character.pf_current < item.cost} onClick={() => {
             const r = attackRoll(character.espirito); update({ pf_current: character.pf_current - item.cost });
             setResult({ name: item.name, attack: r.total, d20: r.d20, crit: r.crit });
             addRoll({ expression: `1d20 + ${character.espirito}`, dice: [r.d20], modifier: character.espirito, total: r.total, source: `${item.name} — acerto${r.crit ? ' CRÍTICO' : ''}`, crit: r.crit });
-          }}><Sparkles /> Usar ({item.cost} PF)</Button>
+          }} className="action-flux"><Sparkles /> Usar ({item.cost} PF)</Button>
           <Button size="sm" variant="outline" disabled={!result || result.name !== item.name || result.damage !== undefined} onClick={() => {
             if (!result) return; const d = damageRoll(`${n}d8`, karmaDamageBonus(character), result.crit);
             setResult({ ...result, damage: d.total, dice: d.dice });
@@ -178,8 +178,8 @@ export function AbsorbPfAction({ character, update, addRoll }: { character: Char
       const r = absorbPf(character.espirito); setRes(r); setOpen(true);
       update({ pf_current: Math.min(character.pf_max, character.pf_current + r.total) });
       addRoll({ expression: `${r.count}d20 (soma ${r.sum}, maior ${r.highest}) + ${r.espirito}`, dice: r.dice, modifier: r.espirito, total: r.total, source: `Absorver PF${r.crit ? ' — CRÍTICO' : ''}`, crit: r.crit });
-    }}><Sparkles /> Absorver PF</Button>
-    {open && res && <div className="game-panel" style={{ gridColumn: '1 / -1' }}>
+    }} className="action-flux"><Sparkles /> Absorver PF</Button>
+    {open && res && <div className="game-panel flux-result" style={{ gridColumn: '1 / -1' }}>
       <div className="panel-head"><h3>Absorver PF · {res.count}d20 (Espírito {res.espirito})</h3><Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Fechar</Button></div>
       <p className="text-sm">Dados: <strong>{res.dice.join(' + ')}</strong> = soma <strong>{res.sum}</strong></p>
       <p className="text-sm mt-2">Maior dado: <strong>{res.highest}</strong> → faixa <strong>{res.band}</strong>{res.crit ? ' · CRÍTICO!' : ''}</p>
