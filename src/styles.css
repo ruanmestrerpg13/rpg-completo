@@ -159,3 +159,36 @@ html{scroll-behavior:smooth}body{font-family:'DM Sans',sans-serif;background:#10
 .nomen-head{display:flex;justify-content:space-between;gap:10px;align-items:baseline}.nomen-head strong{font-family:Cinzel,serif;color:#f0eaf2;font-size:14px}.nomen-head span{font-size:10px;letter-spacing:.1em;color:#b795df}
 .crit-tag{margin-left:8px;color:#f1c774;font-size:10px;letter-spacing:.14em}.log-crit{color:#f1c774!important}
 @media (max-width:700px){.sync-row{grid-template-columns:1fr auto}.sync-row>.stepper{grid-column:1/-1}.gaki-grid{grid-template-columns:1fr}}
+
+/* Identidade dos recursos: Fluxo/PF e críticos em ouro; Karma em violeta fechado. */
+.app-shell {
+  --flux-gold: oklch(0.83 0.13 82);
+  --flux-gold-bright: oklch(0.91 0.115 87);
+  --flux-gold-border: oklch(0.56 0.095 78);
+  --flux-gold-surface: oklch(0.23 0.035 77);
+  --karma-violet: oklch(0.48 0.17 305);
+  --karma-violet-text: oklch(0.72 0.13 306);
+  --karma-violet-border: oklch(0.37 0.09 305);
+  --karma-violet-surface: oklch(0.2 0.045 305);
+}
+.text-flux, .meter-flux-group .field-kicker, .meter-flux-group .font-medium,
+.stepper-flux .field-kicker, .stepper-flux .number-input,
+.flux-result .panel-head h3, .flux-result strong { color: var(--flux-gold-bright); }
+.meter-flux { background: var(--flux-gold); box-shadow: 0 0 10px var(--flux-gold-border); }
+.stepper-flux .number-input { border-color: var(--flux-gold-border); }
+.stepper-flux .step-btn { color: var(--flux-gold)!important; border-color: var(--flux-gold-border)!important; }
+.action-flux { color: var(--flux-gold-bright)!important; border-color: var(--flux-gold-border)!important; }
+.action-flux:hover { background: var(--flux-gold-surface)!important; }
+.flux-result { border-color: var(--flux-gold-border); }
+.meter-karma { background: var(--karma-violet); }
+.meter-karma-group .field-kicker, .meter-karma-group .font-medium,
+.stepper-karma .field-kicker, .stepper-karma .number-input,
+.karma-alert strong { color: var(--karma-violet-text); }
+.stepper-karma .number-input, .karma-alert { border-color: var(--karma-violet-border); }
+.stepper-karma .step-btn, .action-karma { color: var(--karma-violet-text)!important; border-color: var(--karma-violet-border)!important; }
+.action-karma:hover { background: var(--karma-violet-surface)!important; }
+.karma-alert { background: var(--karma-violet-surface); }
+.banner-crit { border-color: var(--flux-gold-border); background: var(--flux-gold-surface); box-shadow: 0 0 18px var(--flux-gold-border); }
+.banner-crit>strong, .crit-tag, .log-crit, .result-critical,
+.result-critical strong { color: var(--flux-gold-bright)!important; }
+.action-critical { color: var(--flux-gold-bright)!important; border-color: var(--flux-gold-border)!important; }
