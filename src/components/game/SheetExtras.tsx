@@ -3,9 +3,9 @@ import { Dices, Plus, Skull, Sparkles, Swords, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Stepper } from './Controls';
 import {
-  ATTR_LABEL, NOMENCLATURE_LABEL, NOMENCLATURE_RANGES, WEAPONS, attackRoll, multiAttackRoll, humanAttackDice, absorbPf, cappedNomenclatureDice, cappedWeaponDice,
-  damageRoll, dieFor, karmaDamageBonus, karmaMaximum, rollDice, weaponAttrFor, weaponByKey,
-  type Character, type NomenclatureKind,
+  ATTR_LABEL, NOMENCLATURE_LABEL, NOMENCLATURE_RANGES, WEAPONS, attackRoll, multiAttackRoll, absorbPf, cappedNomenclatureDice, cappedWeaponDice,
+  damageRoll, dieFor, karmaDamageBonus, karmaMaximum, rollDice, weaponByKey,
+  type Attr, type Character, type NomenclatureKind,
 } from '@/lib/game';
 
 export type RollEntry = { expression: string; dice: number[]; modifier: number; total: number; source?: string; crit?: boolean };
@@ -67,17 +67,15 @@ export function GakiPassive({ character, update, addRoll }: { character: Charact
   </div>;
 }
 
-/** 1.2 Arma: modelo, tipo e dano exatamente da tabela de Dano base. Humanos atacam com MENTE. */
+/** 1.2 Arma: escolha de Corpo/Mente para o acerto; dano permanece limitado pela tabela. */
 export function WeaponPanel({ character, update, addRoll }: { character: Character; update: Update; addRoll: AddRoll }) {
   const [last, setLast] = useState<{ d20: number; total: number; crit: boolean } | null>(null);
   const [dmg, setDmg] = useState<{ total: number; dice: number[]; bonus: number; crit: boolean } | null>(null);
+  const [hitAttr, setHitAttr] = useState<Attr>(character.lineage === 'Humano' ? 'mente' : 'corpo');
   const type = weaponByKey(character.weapon_type);
   const dice = type ? cappedWeaponDice(type.key, character.weapon_dice)! : '';
-  const attr = weaponAttrFor(character.lineage);
-  const hitAttr = type?.attr === 'corpo' ? 'corpo' : attr;
-  const human = character.lineage === 'Humano' && type?.attr !== 'corpo';
-  const hitCount = human ? humanAttackDice(character.mente) : 1;
-  const damageAttr = type?.attr === 'corpo' ? 'corpo' : type?.attr === 'atributo' && !human ? attr : null;
+  const hitCount = Math.max(1, character[hitAttr]);
+  const damageAttr = type?.attr === 'corpo' ? 'corpo' : type?.attr === 'atributo' ? hitAttr : null;
   const bonus = (damageAttr ? character[damageAttr] : 0) + karmaDamageBonus(character);
   return <div className="weapon-block">
     <span className="field-kicker">{character.lineage === 'Humano' ? 'ARMA DE VÍNCULO · VONTADE, HISTÓRIA E IDENTIDADE' : 'ARMA'}</span>
@@ -87,6 +85,10 @@ export function WeaponPanel({ character, update, addRoll }: { character: Charact
       </select></Field>
       <Field label="DANO (TABELA)"><select disabled={!type} value={dice} onChange={e => update({ weapon_dice: e.target.value })}>
         {(type?.dice ?? []).map(d => <option key={d}>{d}</option>)}
+      </select></Field>
+      <Field label="ATACAR COM"><select value={hitAttr} onChange={e => { setHitAttr(e.target.value as Attr); setLast(null); setDmg(null); }}>
+        <option value="mente">Mente ({character.mente}d20)</option>
+        <option value="corpo">Corpo ({character.corpo}d20)</option>
       </select></Field>
     </div>
     {type && <p className="weapon-summary">Ataque <strong>{hitCount}d20{hitCount > 1 ? ' (maior)' : ''} + {ATTR_LABEL[hitAttr]} ({character[hitAttr]})</strong> · Dano <strong>{dice}{damageAttr ? ` + ${ATTR_LABEL[damageAttr]} (${character[damageAttr]})` : ''}{karmaDamageBonus(character) ? ` + ${karmaDamageBonus(character)} Karma` : ''}</strong><br /><span>{type.note}</span></p>}
