@@ -175,12 +175,14 @@ export function AbsorbPfAction({ character, update, addRoll }: { character: Char
     <Button variant="outline" onClick={() => {
       const r = absorbPf(character.espirito); setRes(r); setOpen(true);
       update({ pf_current: Math.min(character.pf_max, character.pf_current + r.total) });
-      addRoll({ expression: `${r.count}d20 (convertidos) + ${r.espirito}`, dice: r.dice.map(d => d.value), modifier: r.espirito, total: r.total, source: `Absorver PF${r.crit ? ' — CRÍTICO' : ''}`, crit: r.crit });
+      addRoll({ expression: `${r.count}d20 (soma ${r.sum}, maior ${r.highest}) + ${r.espirito}`, dice: r.dice, modifier: r.espirito, total: r.total, source: `Absorver PF${r.crit ? ' — CRÍTICO' : ''}`, crit: r.crit });
     }}><Sparkles /> Absorver PF</Button>
     {open && res && <div className="game-panel" style={{ gridColumn: '1 / -1' }}>
       <div className="panel-head"><h3>Absorver PF · {res.count}d20 (Espírito {res.espirito})</h3><Button size="sm" variant="ghost" onClick={() => setOpen(false)}>Fechar</Button></div>
-      <ul className="field-stack text-sm">{res.dice.map((d, i) => <li key={i}>D20 #{i + 1}: <strong>{d.value}</strong> · faixa {d.band} → <strong>{d.pf} PF</strong>{d.crit ? ' · CRÍTICO!' : ''}</li>)}</ul>
-      <p className="text-sm mt-3">PF dos dados: <strong>{res.diceTotal}</strong> + Espírito: <strong>{res.espirito}</strong> = <strong>{res.total} PF absorvidos</strong>{res.crit ? ' · houve crítico (20)' : ''}</p>
+      <p className="text-sm">Dados: <strong>{res.dice.join(' + ')}</strong> = soma <strong>{res.sum}</strong></p>
+      <p className="text-sm mt-2">Maior dado: <strong>{res.highest}</strong> → faixa <strong>{res.band}</strong>{res.crit ? ' · CRÍTICO!' : ''}</p>
+      <p className="text-sm mt-2">Aplicado à soma inteira: <strong>{res.diceTotal} PF</strong></p>
+      <p className="text-sm mt-3">PF dos dados: <strong>{res.diceTotal}</strong> + Espírito: <strong>{res.espirito}</strong> = <strong>{res.total} PF absorvidos</strong>{res.crit ?  · houve crítico (20)' : ''}</p>
       <p className="muted-copy text-xs mt-1">PF atual atualizado automaticamente (limitado ao PF máximo).</p>
     </div>}
   </>;

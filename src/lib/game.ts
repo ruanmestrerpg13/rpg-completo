@@ -72,25 +72,27 @@ export function initiativeRoll(corpo: number) { const dice = rollDice(Math.max(1
 export function normalizeCharacter(c: Partial<Character> & { id: string }): Character { return { ...makeCharacter(), ...c, abilities: Array.isArray(c.abilities) ? c.abilities : [], sync: Array.isArray(c.sync) ? c.sync : [], nomenclatures: Array.isArray(c.nomenclatures) ? c.nomenclatures : [], inventory: Array.isArray(c.inventory) ? c.inventory : [], weapon_type: c.weapon_type ?? '', weapon_dice: c.weapon_dice ?? '', initiative: c.initiative ?? null } as Character; }
 
 /* ---------- Absorver PF ---------- */
-export type AbsorbDie = { value: number; band: string; pf: number; crit: boolean };
-/** Converte um d20 individual em PF: 1–7 → 1/3, 8–14 → metade, 15–19 → valor cheio, 20 → dobro. */
-export function absorbDieToPf(value: number): AbsorbDie {
-  if (value >= 20) return { value, band: '20 · crítico (dobro)', pf: value * 2, crit: true };
-  if (value >= 15) return { value, band: '15–19 · valor completo', pf: value, crit: false };
-  if (value >= 8) return { value, band: '8–14 · metade', pf: Math.floor(value / 2), crit: false };
-  return { value, band: '1–7 · 1/3', pf: Math.floor(value / 3), crit: false };
+/** Faixa definida pelo MAIOR d20: 1–7 → 1/3, 8–14 → metade, 15–19 → valor cheio, 20 → dobro. */
+export function absorbBand(highest: number) {
+  if (highest >= 20) return { band: '20 · crítico (dobro)', apply: (v: number) => v * 2, crit: true };
+  if (highest >= 15) return { band: '15–19 · valor completo', apply: (v: number) => v, crit: false };
+  if (highest >= 8) return { band: '8–14 · metade', apply: (v: number) => Math.floor(v / 2), crit: false };
+  return { band: '1–7 · 1/3', apply: (v: number) => Math.floor(v / 3), crit: false };
 }
-/** Quantidade de d20 = Espírito; PF final = soma dos PF convertidos + Espírito. */
+/** d20 = Espírito. Soma todos os dados; o maior dado define a faixa aplicada à soma inteira; depois + Espírito. */
 export function absorbPf(espirito: number) {
   const count = Math.max(1, espirito);
-  const dice = rollDice(count, 20).map(absorbDieToPf);
-  const diceTotal = dice.reduce((a, d) => a + d.pf, 0);
-  return { count, dice, diceTotal, espirito, total: diceTotal + espirito, crit: dice.some(d => d.crit) };
+  const dice = rollDice(count, 20);
+  const sum = dice.reduce((a, b) => a + b, 0);
+  const highest = Math.max(...dice);
+  const band = absorbBand(highest);
+  const diceTotal = band.apply(sum);
+  return { count, dice, sum, highest, band: band.band, crit: band.crit, diceTotal, espirito, total: diceTotal + espirito };
 }
 
 /* ---------- Arma de Vontade/História/Identidade (Humano) ---------- */
-/** Humano: ataque com (MENTE + 2)d20, usa o maior dado + MENTE. Crítico com qualquer 20 natural. */
-export const humanAttackDice = (mente: number) => Math.max(1, mente) + 2;
+/** Humano: ataque com MENTE d20 (Mente 1 = 1d20, 2 = 2d20...), usa o maior dado + MENTE. */
+export const humanAttackDice = (mente: number) => Math.max(1, mente);
 export function multiAttackRoll(count: number, attrValue: number, esquiva?: number) {
   const dice = rollDice(Math.max(1, count), 20); const d20 = Math.max(...dice); const total = d20 + attrValue;
   const hit = esquiva === undefined ? null : total >= esquiva;
