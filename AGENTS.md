@@ -13,3 +13,4 @@
 - Keep RPG interaction logic in client-safe modules and never assume the public reference site's private authenticated data is available.
 - Weapon and Nomenclature damage come only from the capped tables in src/lib/game.ts (WEAPONS, NOMENCLATURE_RANGES); combat and sheets must reuse them so no damage exceeds the rulebook.
 - The master changes another player's PV/PF only through the `master_update_sheet` database function; sheets stay owner-editable only.
+- Sheet notes (Anotações) are stored inside the existing `story` column after a marker (splitStory/joinStory in src/lib/game.ts), so no database change is needed and the original backend keeps working.
