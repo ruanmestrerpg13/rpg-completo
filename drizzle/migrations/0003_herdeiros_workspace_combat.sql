@@ -1,0 +1,3 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+CREATE TABLE IF NOT EXISTS public.sheets (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
+SELECT 1;

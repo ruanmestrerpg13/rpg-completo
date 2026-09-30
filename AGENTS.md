@@ -8,3 +8,8 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Use Lovable Cloud tables for signed-in sheets, campaigns, and NPCs with owner-scoped RLS; signed-out visitors use transient demo state so the experience is inspectable without an account.
+- Keep RPG interaction logic in client-safe modules and never assume the public reference site's private authenticated data is available.
+- Weapon and Nomenclature damage come only from the capped tables in src/lib/game.ts (WEAPONS, NOMENCLATURE_RANGES); combat and sheets must reuse them so no damage exceeds the rulebook.
+- The master changes another player's PV/PF only through the `master_update_sheet` database function; sheets stay owner-editable only.
