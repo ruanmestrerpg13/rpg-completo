@@ -68,7 +68,7 @@ export function CombatPanel({ campaign, party, npcs, saveCampaign, saveNpc, upda
     if (!attacker || !target || !option) return;
     if (option.pfCost > attacker.pf) return;
     const attrValue = attacker[option.hitAttr];
-    const hc = option.hitCount ?? 1; const r = hc > 1 ? multiAttackRoll(hc, attrValue, target.esquiva) : { ...attackRoll(attrValue, target.esquiva), dice: undefined as number[] | undefined };
+    const hc = option.hitCount ?? Math.max(1, attrValue); const r = hc > 1 ? multiAttackRoll(hc, attrValue, target.esquiva) : { ...attackRoll(attrValue, target.esquiva), dice: undefined as number[] | undefined };
     if (option.pfCost) setResources(attacker, null, attacker.pf - option.pfCost);
     setPending({ attackerId: attacker.id, targetId: target.id, option, dice, d20: r.d20, total: r.total, esquiva: target.esquiva, hit: !!r.hit, crit: r.crit });
     addRoll({ expression: `${hc}d20${hc > 1 ? ' (maior)' : ''} + ${attrValue}`, dice: r.dice ?? [r.d20], modifier: attrValue, total: r.total, source: `${attacker.name} → ${target.name}${r.crit ? ' — CRÍTICO' : ''}`, crit: r.crit });
@@ -118,7 +118,7 @@ export function CombatPanel({ campaign, party, npcs, saveCampaign, saveNpc, upda
           </div>
           <label className="field"><span className="field-label">ATAQUE</span><select value={option?.id} onChange={e => { setOptionId(e.target.value); setDiceChoice(''); setPending(null); }}>{options.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
           {option && option.dice.length > 1 && <label className="field"><span className="field-label">DADOS DE DANO (LIMITE DA TABELA)</span><select value={dice} onChange={e => setDiceChoice(e.target.value)}>{option.dice.map(d => <option key={d}>{d}</option>)}</select></label>}
-          {option && <p className="weapon-summary">Acerto: <strong>1d20 + {ATTR_LABEL[option.hitAttr]} ({attacker[option.hitAttr]})</strong> vs Esquiva <strong>{target.esquiva}</strong> · Dano <strong>{dice}{option.damageAttr ? ` + ${ATTR_LABEL[option.damageAttr]} (${attacker[option.damageAttr]})` : ''}{option.karma ? ` + ${option.karma} Karma` : ''}</strong>{option.pfCost ? <> · Custo <strong>{option.pfCost} PF</strong> (tem {attacker.pf})</> : null}</p>}
+          {option && <p className="weapon-summary">Acerto: <strong>{option.hitCount ?? Math.max(1, attacker[option.hitAttr])}d20{(option.hitCount ?? attacker[option.hitAttr]) > 1 ? ' (maior)' : ''} + {ATTR_LABEL[option.hitAttr]} ({attacker[option.hitAttr]})</strong> vs Esquiva <strong>{target.esquiva}</strong> · Dano <strong>{dice}{option.damageAttr ? ` + ${ATTR_LABEL[option.damageAttr]} (${attacker[option.damageAttr]})` : ''}{option.karma ? ` + ${option.karma} Karma` : ''}</strong>{option.pfCost ? <> · Custo <strong>{option.pfCost} PF</strong> (tem {attacker.pf})</> : null}</p>}
           <label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={useBlock} onChange={e => setUseBlock(e.target.checked)} /> Aplicar Bloqueio/RD do alvo ({target.bloqueio})</label>
           <div className="flex flex-wrap gap-2">
             <Button disabled={!option || option.pfCost > attacker.pf} onClick={rollAttack}><Swords /> Rolar ataque</Button>
